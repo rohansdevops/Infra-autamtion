@@ -40,8 +40,19 @@ resource "aws_instance" "nginx_instance" {
               yum install -y nginx
               systemctl start nginx
               systemctl enable nginx
-              echo "CSA DevOps Exam – Instance IP: $(hostname -I)" > /usr/share/nginx/html/index.html
+              PRIVATE_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
+              cat <<HTML > /usr/share/nginx/html/index.html
+              <!DOCTYPE html>
+              <html>
+              <body>
+              <h1>CSA DevOps Exam – Instance IP: ${PRIVATE_IP}</h1>
+              </body>
+              </html>
+              HTML
+
+              systemctl restart nginx
               EOF
+              `
 
   tags = {
     Name = "nginx-instance"
