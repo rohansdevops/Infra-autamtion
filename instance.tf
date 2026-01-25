@@ -45,7 +45,7 @@ resource "aws_instance" "nginx_instance" {
               <!DOCTYPE html>
               <html>
               <body>
-              <h1>CSA DevOps Exam – Instance IP: ${PRIVATE_IP}</h1>
+              <h1>CSA DevOps Exam – Instance IP: $${PRIVATE_IP}</h1>
               </body>
               </html>
               HTML
