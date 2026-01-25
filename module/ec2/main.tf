@@ -1,17 +1,3 @@
-# resource "aws_instance" "this" {
-#   ami                    = var.ami_id
-#   instance_type          = var.instance_type
-#   vpc_security_group_ids = [var.security_group]
-#   key_name               = var.key_name
-
-#   user_data = var.user_data_script
-
-#   tags = {
-#     Name = "CSA-DevOps-EC2"
-#   }
-# }
-
-
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
