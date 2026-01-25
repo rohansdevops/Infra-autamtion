@@ -34,24 +34,33 @@ resource "aws_instance" "nginx_instance" {
   security_groups = [aws_security_group.nginx_sg.name]
 
   user_data = <<-EOF
-              #!/bin/bash
-              yum update -y
-              amazon-linux-extras enable nginx1
-              yum install -y nginx
-              systemctl start nginx
-              systemctl enable nginx
-              PRIVATE_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
-              cat <<HTML > /usr/share/nginx/html/index.html
-              <!DOCTYPE html>
-              <html>
-              <body>
-              <h1>CSA DevOps Exam – Instance IP: $${PRIVATE_IP}</h1>
-              </body>
-              </html>
-              HTML
+#!/bin/bash
+dnf update -y
+dnf install -y nginx
+systemctl enable nginx
+systemctl start nginx
 
-              systemctl restart nginx
-              EOF
+
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+
+
+PRIVATE_IP=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" \
+  http://169.254.169.254/latest/meta-data/local-ipv4)
+
+
+echo "<!DOCTYPE html>
+<html>
+  <body>
+    <h1>CSA DevOps Exam - Instance Private IP: $PRIVATE_IP</h1>
+  </body>
+</html>" > /usr/share/nginx/html/index.html
+
+systemctl restart nginx
+EOF
+
+
+
   tags = {
     Name = "nginx-instance"
   }
