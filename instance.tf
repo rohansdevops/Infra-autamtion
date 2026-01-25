@@ -52,8 +52,6 @@ resource "aws_instance" "nginx_instance" {
 
               systemctl restart nginx
               EOF
-              `
-
   tags = {
     Name = "nginx-instance"
   }
