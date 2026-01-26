@@ -274,7 +274,7 @@ These parameters control pipeline behavior at runtime:
 
 ---
 
-## 🔐 Environment Variables (AWS Credentials)
+##  Environment Variables (AWS Credentials)
 
 ```groovy
 environment {
@@ -447,6 +447,7 @@ stage('Output Result') {
 * Confirms successful deployment
 
 ---
+
 
 
 
