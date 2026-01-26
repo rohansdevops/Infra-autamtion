@@ -198,3 +198,237 @@ After deployment:
 
 ---
 
+
+# Jenkins Pipeline for Terraform Infrastructure Automation
+
+##  Overview
+
+This Jenkins pipeline automates **AWS infrastructure provisioning and destruction using Terraform**. It supports **manual approval**, **parameterized execution**, and **deployment validation**, making it suitable for real-world DevOps and production environments.
+
+The pipeline performs the following actions:
+
+* Clones Terraform code from GitHub
+* Initializes Terraform
+* Generates and reviews a Terraform plan
+* Applies or destroys infrastructure based on user input
+* Validates application deployment
+
+---
+
+##  Prerequisites
+
+* Jenkins installed and running
+* Terraform installed on Jenkins agent
+* AWS IAM credentials stored in Jenkins
+* GitHub repository with Terraform code
+
+---
+
+##  Pipeline Structure
+
+This is a **Declarative Jenkins Pipeline**, defined using a `Jenkinsfile`.
+
+```groovy
+pipeline {
+    agent any
+}
+```
+
+
+---
+
+## Build Parameters
+
+```groovy
+parameters {
+    booleanParam(name: 'autoApprove', defaultValue: false)
+    choice(name: 'action', choices: ['apply', 'destroy'])
+}
+```
+* autoApprove: If false, manual approval is required before Terraform apply
+* action: Choose whether to apply or destroy infrastructure 
+
+These parameters control pipeline behavior at runtime:
+
+
+---
+
+## 🔐 Environment Variables (AWS Credentials)
+
+```groovy
+environment {
+    AWS_ACCESS_KEY_ID     = credentials('AWS_Access_Key')
+    AWS_SECRET_ACCESS_KEY = credentials('AWS_Secret_Access_Key')
+    AWS_DEFAULT_REGION    = 'eu-north-1'
+}
+```
+
+* AWS credentials are securely injected from Jenkins Credentials Manager
+* Avoids hardcoding sensitive information
+* Sets AWS region for Terraform execution
+
+---
+
+## Stage 1: Checkout Source Code
+
+```groovy
+stage('Checkout') {
+    steps {
+        git branch: 'main', url: 'https://github.com/rohansdevops/Infra-autamtion.git'
+    }
+}
+```
+
+* Clones the Terraform project from GitHub
+* Ensures Jenkins always works with the latest code
+
+---
+
+## Stage 2: Terraform Initialization
+
+```groovy
+stage('Terraform init') {
+    steps {
+        sh 'terraform init'
+    }
+}
+```
+
+* Initializes Terraform working directory
+* Downloads providers and configures backend
+
+---
+
+## Stage 3: Terraform Plan
+
+```groovy
+stage('Plan') {
+    steps {
+        sh 'terraform plan -out tfplan'
+        sh 'terraform show -no-color tfplan > tfplan.txt'
+    }
+}
+```
+
+* Generates execution plan
+* Saves plan for reuse and review
+* Converts plan into readable text format
+
+---
+
+## Stage 4: Apply / Destroy Infrastructure
+
+### Apply Flow
+
+```groovy
+if (params.action == 'apply') {
+```
+
+#### Manual Approval
+
+```groovy
+input message: "Do you want to apply the plan?"
+```
+
+* Displays Terraform plan
+* Requires human confirmation (if autoApprove is false)
+
+#### Apply Terraform Plan
+
+```groovy
+sh "terraform apply -input=false tfplan"
+```
+
+* Applies the exact plan generated earlier
+
+---
+
+### Destroy Flow
+
+```groovy
+else if (params.action == 'destroy') {
+    sh "terraform destroy --auto-approve"
+}
+```
+
+### Explanation
+
+* Destroys all managed infrastructure
+* Auto-approved to avoid unnecessary prompts
+
+---
+
+## Stage 5: Wait for EC2 Readiness
+
+```groovy
+stage('Configure EC2 waiting for running status') {
+    steps {
+        sh 'sleep 90'
+    }
+}
+```
+
+* Allows EC2 instance time to boot
+* Ensures application is ready before validation
+
+---
+
+## Stage 6: Deployment Validation
+
+```groovy
+stage('Deployment Validation') {
+```
+
+### Runs only during apply
+
+```groovy
+when {
+    expression { return params.action == 'apply' }
+}
+```
+
+### Validation Steps
+
+```groovy
+def public_ip = sh(script: "terraform output -raw instance_public_ip")
+```
+
+* Fetches EC2 public IP from Terraform output
+
+```groovy
+def response = sh(script: "curl -s http://$public_ip")
+```
+
+* Sends HTTP request to deployed application
+
+```groovy
+if(!response.contains("CSA DevOps Exam - Instance IP:")) {
+    error "Deployment validation failed"
+}
+```
+
+* Verifies application content
+* Fails pipeline if validation does not pass
+
+---
+
+##  Stage 7: Output Result
+
+```groovy
+stage('Output Result') {
+    steps {
+        echo "Application is deployed at http://$public_ip"
+    }
+}
+```
+
+* Displays deployed application URL
+* Confirms successful deployment
+
+---
+
+
+
+
+
+
