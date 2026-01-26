@@ -148,7 +148,7 @@ These parameters control pipeline behavior at runtime:
 
 ---
 
-## 🔐 Environment Variables (AWS Credentials)
+##  Environment Variables (AWS Credentials)
 
 ```groovy
 environment {
@@ -169,7 +169,7 @@ environment {
 ```groovy
 stage('Checkout') {
     steps {
-        git branch: 'main', url: 'https://github.com/rohansdevops/Infra-autamtion.git'
+        git branch: 'module', url: 'https://github.com/rohansdevops/Infra-autamtion.git'
     }
 }
 ```
@@ -321,3 +321,4 @@ stage('Output Result') {
 * Confirms successful deployment
 
 ---
+
