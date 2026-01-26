@@ -1,4 +1,23 @@
 ## Static Terraform Deployment of EC2 with Nginx Showing Dynamic Private IP
+Infra-autamtion/
+│
+├── .gitignore
+│   └── Ignores Terraform state files, logs, and sensitive data
+│
+├── Jenkinsfile
+│   └── Jenkins CI/CD pipeline to automate Terraform init, plan, apply, and destroy
+│
+├── README.md
+│   └── Project documentation explaining infrastructure, pipeline, and usage
+│
+├── instance.tf
+│   └── Terraform configuration file
+│       ├── AWS provider configuration
+│       ├── Security Group for Nginx (HTTP & SSH)
+│       ├── EC2 instance creation
+│       ├── User data script to install and configure Nginx
+│       └── Outputs for public and private IPs
+
 
 ## Overview
 This project uses Terraform to provision an AWS EC2 instance and automatically install Nginx. The deployed Nginx web page dynamically displays the private IP address of the EC2 instance using the AWS Instance Metadata Service (IMDSv2).
@@ -426,6 +445,7 @@ stage('Output Result') {
 * Confirms successful deployment
 
 ---
+
 
 
 
